@@ -22,6 +22,8 @@ public class CarryableMirrorStand : MonoBehaviour
 
     public float xRotation = 0f;
 
+    public bool popupRequired;
+    public GameObject popup;
 
     void Start()
     {
@@ -30,6 +32,16 @@ public class CarryableMirrorStand : MonoBehaviour
 
     void Update()
     {
+        //Tooltip popup
+        if (Vector3.Distance(transform.position, Player.transform.position) <= activationRange && popupRequired && hasMirror == true && interactTimer == 0)
+        {
+            popup.gameObject.SetActive(true);
+        }
+        else if (Vector3.Distance(transform.position, Player.transform.position) > activationRange && Vector3.Distance(transform.position, Player.transform.position) <= (activationRange + 1) && popupRequired || hasMirror == false && popupRequired)
+        {
+            popup.gameObject.SetActive(false);
+        }
+
         //Slight cooldown between interactions with mirror
         if (interactTimer > 0)
         {
@@ -41,6 +53,8 @@ public class CarryableMirrorStand : MonoBehaviour
         {
             usingMirror = true;
             interactTimer = interactCooldown;
+            Player.SetActive(false);
+            mirrorCam.SetActive(true);
         }
 
         //Mirror rotation
@@ -81,7 +95,6 @@ public class CarryableMirrorStand : MonoBehaviour
         //Place mirror on stand
         if (Vector3.Distance(transform.position, Player.transform.position) <= activationRange && Input.GetKeyDown(KeyCode.E) && interactTimer <= 0 && usingMirror == false && hasMirror == false && Player.GetComponent<PlayerMovement>().carryingMirror == true)
         {
-            Debug.Log("FIRST ONE");
             hasMirror = true;
             Player.GetComponent<PlayerMovement>().carryingMirror = false;
             interactTimer = interactCooldown;
@@ -90,7 +103,6 @@ public class CarryableMirrorStand : MonoBehaviour
         //Take mirror from stand
         if (Vector3.Distance(transform.position, Player.transform.position) <= activationRange && Input.GetKeyDown(KeyCode.E) && interactTimer <= 0 && usingMirror == false && hasMirror == true && Player.GetComponent<PlayerMovement>().carryingMirror == false)
         {
-            Debug.Log("SECOND ONE");
             hasMirror = false;
             Player.GetComponent<PlayerMovement>().carryingMirror = true;
             interactTimer = interactCooldown;

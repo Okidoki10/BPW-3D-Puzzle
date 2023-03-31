@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Unity.VisualScripting;
-using UnityEditor.PackageManager;
 using UnityEngine;
 using static UnityEngine.GraphicsBuffer;
 
@@ -31,6 +30,8 @@ public class MovableMirrorStand : MonoBehaviour
     public float interactTimer;
     public float interactCooldown;
 
+    public bool interactPopupRequired;
+    public GameObject interactPopup;
 
     void Start()
     {
@@ -39,6 +40,16 @@ public class MovableMirrorStand : MonoBehaviour
 
     void Update()
     {
+        //Tooltip popup
+        if (Vector3.Distance(transform.position, Player.transform.position) <= activationRange && interactPopupRequired && movingMirror == false && interactTimer == 0)
+        {
+            interactPopup.SetActive(true);
+        }
+        else if (Vector3.Distance(transform.position, Player.transform.position) > activationRange && Vector3.Distance(transform.position, Player.transform.position) <= (activationRange + 1) && interactPopupRequired || movingMirror == true)
+        {
+            interactPopup.SetActive(false);
+        }
+
         //Slight cooldown between interactions with mirror
         if (interactTimer > 0)
         {
@@ -48,9 +59,9 @@ public class MovableMirrorStand : MonoBehaviour
         //Grab mirror from one of four sides
         if (Vector3.Distance(stand.transform.position, Player.transform.position) <= activationRange && Player.transform.position.x >= transform.position.x && Player.transform.position.z >= negZpoint.transform.position.z && Player.transform.position.z <= posZpoint.transform.position.z && Input.GetKeyDown(KeyCode.E) && interactTimer <= 0 && stand.GetComponent<MirrorStand>().usingMirror == false && movingMirror == false)
         {
-            Debug.Log("POS X");
             Player.GetComponent<PlayerMovement>().moveEnabled = false;
             Player.GetComponentInChildren<MouseLook>().turnEnabled = false;
+            stand.GetComponent<MirrorStand>().usable = false;
             movingMirror = true;
             interactTimer = interactCooldown;
             Player.transform.rotation = Quaternion.LookRotation(-transform.forward);
@@ -62,9 +73,9 @@ public class MovableMirrorStand : MonoBehaviour
 
         if (Vector3.Distance(stand.transform.position, Player.transform.position) <= activationRange && Player.transform.position.x <= transform.position.x && Player.transform.position.z >= negZpoint.transform.position.z && Player.transform.position.z <= posZpoint.transform.position.z && Input.GetKeyDown(KeyCode.E) && interactTimer <= 0 && stand.GetComponent<MirrorStand>().usingMirror == false && movingMirror == false)
         {
-            Debug.Log("NEG X");
             Player.GetComponent<PlayerMovement>().moveEnabled = false;
             Player.GetComponentInChildren<MouseLook>().turnEnabled = false;
+            stand.GetComponent<MirrorStand>().usable = false;
             movingMirror = true;
             interactTimer = interactCooldown;
             Player.transform.rotation = Quaternion.LookRotation(transform.forward);
@@ -76,9 +87,9 @@ public class MovableMirrorStand : MonoBehaviour
 
         if (Vector3.Distance(stand.transform.position, Player.transform.position) <= activationRange && Player.transform.position.z >= transform.position.z && Player.transform.position.x >= negXpoint.transform.position.x && Player.transform.position.x <= posXpoint.transform.position.x && Input.GetKeyDown(KeyCode.E) && interactTimer <= 0 && stand.GetComponent<MirrorStand>().usingMirror == false && movingMirror == false)
         {
-            Debug.Log("POS Z");
             Player.GetComponent<PlayerMovement>().moveEnabled = false;
             Player.GetComponentInChildren<MouseLook>().turnEnabled = false;
+            stand.GetComponent<MirrorStand>().usable = false;
             movingMirror = true;
             interactTimer = interactCooldown;
             Player.transform.rotation = Quaternion.LookRotation(transform.right);
@@ -90,9 +101,9 @@ public class MovableMirrorStand : MonoBehaviour
 
         if (Vector3.Distance(stand.transform.position, Player.transform.position) <= activationRange && Player.transform.position.z <= transform.position.z && Player.transform.position.x >= negXpoint.transform.position.x && Player.transform.position.x <= posXpoint.transform.position.x && Input.GetKeyDown(KeyCode.E) && interactTimer <= 0 && stand.GetComponent<MirrorStand>().usingMirror == false && movingMirror == false)
         {
-            Debug.Log("NEG Z");
             Player.GetComponent<PlayerMovement>().moveEnabled = false;
             Player.GetComponentInChildren<MouseLook>().turnEnabled = false;
+            stand.GetComponent<MirrorStand>().usable = false;
             movingMirror = true;
             interactTimer = interactCooldown;
             Player.transform.rotation = Quaternion.LookRotation(-transform.right);
@@ -103,11 +114,12 @@ public class MovableMirrorStand : MonoBehaviour
         }
 
         //Let go of mirror
-        if (Input.GetKeyDown(KeyCode.E) && interactTimer <= 0 && stand.GetComponent<MirrorStand>().usingMirror == false)
+        if (Input.GetKeyDown(KeyCode.E) && Vector3.Distance(stand.transform.position, Player.transform.position) <= activationRange && interactTimer <= 0 && stand.GetComponent<MirrorStand>().usingMirror == false)
         {
             movingMirror = false;
             Player.GetComponent<PlayerMovement>().moveEnabled = true;
             Player.GetComponentInChildren<MouseLook>().turnEnabled = true;
+            stand.GetComponent<MirrorStand>().usable = true;
         }
 
         if (movingMirror)
@@ -119,24 +131,16 @@ public class MovableMirrorStand : MonoBehaviour
 
             if (z > 0 && oppositeSide.GetComponent<MovablePlatePoints>().movable)
             {
-                Player.GetComponent<PlayerMovement>().controller.Move(move * speed * Time.deltaTime);
+                Player.GetComponent<PlayerMovement>().controller.Move(speed * Time.deltaTime * move);
             }
 
             if (z < 0 && currentSide.GetComponent<MovablePlatePoints>().movable)
             {
-                Player.GetComponent<PlayerMovement>().controller.Move(move * speed * Time.deltaTime);
+                Player.GetComponent<PlayerMovement>().controller.Move(speed * Time.deltaTime * move);
             }
 
             standDistance = new Vector3(Player.transform.position.x + standDistanceX, transform.position.y, Player.transform.position.z + standDistanceZ);
             transform.position = standDistance;
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (gameObject.name == "posXpoint")
-        {
-
         }
     }
 

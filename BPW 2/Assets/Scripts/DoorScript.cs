@@ -8,6 +8,9 @@ public class DoorScript : MonoBehaviour
     public float activationTimer;
     public float baseActivationTime;
 
+    public float requiredActiveNumber = 1;
+    public float activeNumber = 0;
+
     public bool isOpen;
     public float openSpeed;
     public float minOpenSpeed;
@@ -17,6 +20,9 @@ public class DoorScript : MonoBehaviour
     public float minCloseSpeed;
     public float maxCloseSpeed;
     public float closeIncrement;
+
+    public float topPos = 4.5f;
+    public float bottomPos = 0;
 
     public void Update()
     {
@@ -29,18 +35,25 @@ public class DoorScript : MonoBehaviour
         {
             isOpen = false;
         }
+
+        if (activeNumber >= requiredActiveNumber)
+        {
+            activationTimer = baseActivationTime;
+        }
+
+        activeNumber = 0;
     }
 
     public void OnActivation()
-    {   
-        activationTimer = baseActivationTime;
+    {
+        activeNumber++;
     }
 
     public void FixedUpdate()
     {
-        if (isOpen && transform.position.y < 4.5f)
+        if (isOpen && transform.position.y < topPos)
         {
-            transform.Translate(Vector3.forward * openSpeed * Time.deltaTime);
+            transform.Translate(openSpeed * Time.deltaTime * Vector3.forward);
             closeSpeed = minCloseSpeed;
 
             if (openSpeed <= maxOpenSpeed)
@@ -48,9 +61,9 @@ public class DoorScript : MonoBehaviour
                 openSpeed += openIncrement;
             }
         }
-        else if (!isOpen && transform.position.y > 0)
+        else if (!isOpen && transform.position.y > bottomPos)
         {
-            transform.Translate(-Vector3.forward * closeSpeed * Time.deltaTime);
+            transform.Translate(closeSpeed * Time.deltaTime * -Vector3.forward);
             openSpeed = minOpenSpeed;
 
             if (closeSpeed <= maxCloseSpeed)

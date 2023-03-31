@@ -14,11 +14,17 @@ public class MirrorStand : MonoBehaviour
     public float activationRange;
 
     public bool usingMirror;
+    public bool usable = true;
     public float interactTimer;
     public float interactCooldown;
 
     float xMirrorRotation = 0f;
+    public bool clamped;
+    public float clampMin;
+    public float clampMax;
 
+    public bool popupRequired;
+    public GameObject popup;
 
     void Start()
     {
@@ -27,17 +33,27 @@ public class MirrorStand : MonoBehaviour
 
     void Update()
     {
+        //Tooltip popup
+        if (Vector3.Distance(transform.position, Player.transform.position) <= activationRange && popupRequired && usingMirror == false && interactTimer == 0)
+        {
+            popup.SetActive(true);
+        }
+        else if (Vector3.Distance(transform.position, Player.transform.position) > activationRange && Vector3.Distance(transform.position, Player.transform.position) <= (activationRange + 1) || usingMirror == true)
+        {
+            popup.SetActive(false);
+        }
+
         if (interactTimer > 0)
         {
             interactTimer -= Time.deltaTime;
         }
 
-        if (Vector3.Distance(transform.position, Player.transform.position) <= activationRange && Input.GetKeyDown(KeyCode.Mouse0) && interactTimer <= 0 && usingMirror == false)
+        if (Vector3.Distance(transform.position, Player.transform.position) <= activationRange && Input.GetKeyDown(KeyCode.Mouse0) && interactTimer <= 0 && usingMirror == false && usable == true)
         {
             usingMirror = true;
             interactTimer = interactCooldown;
-            Player.gameObject.SetActive(false);
-            mirrorCam.gameObject.SetActive(true);
+            Player.SetActive(false);
+            mirrorCam.SetActive(true);
         }
 
         if (usingMirror == true)
@@ -45,7 +61,11 @@ public class MirrorStand : MonoBehaviour
             //Mirror controller
             float mouseX = Input.GetAxis("Mouse X") * turnSpeed * Time.deltaTime;
 
-            xMirrorRotation -= mouseX;
+            xMirrorRotation += mouseX;
+            if (clamped)
+            {
+                xMirrorRotation = Mathf.Clamp(xMirrorRotation, clampMin, clampMax);
+            }
 
             transform.localRotation = Quaternion.Euler(0f, xMirrorRotation, 0f);
             stand.Rotate(Vector3.up * mouseX);
@@ -57,8 +77,8 @@ public class MirrorStand : MonoBehaviour
                 {
                     usingMirror = false;
                     interactTimer = interactCooldown;
-                    Player.gameObject.SetActive(true);
-                    mirrorCam.gameObject.SetActive(false);
+                    Player.SetActive(true);
+                    mirrorCam.SetActive(false);
                 }
             }
         }
